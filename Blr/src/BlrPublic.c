@@ -59,6 +59,7 @@
 
 static uint32_t nExternalFunctionAddress = 0;
 static uint16_t nExternalFunctionVersion = 0;
+static uint8_t  nBootloaderInitStatus = BOOTLOADER_INIT_STATE_UNINITIALISED;
 
 /******************************************************************************/
 /* External Function Declarations*/
@@ -96,6 +97,7 @@ BlrPubSetup(
     if (pBLInfo->Checksum == BLR_STRUCT_INVALID_CHECKSUM_MIN || pBLInfo->Checksum == BLR_STRUCT_INVALID_CHECKSUM_MAX)
     {
         //checksum is very likely invalid
+        nBootloaderInitStatus = BOOTLOADER_INIT_STATE_ERROR_CHECKSUM_INVALID;
         return false;
     }
     else
@@ -103,21 +105,25 @@ BlrPubSetup(
     if (pBLInfo->HeaderSize < BLR_STRUCT_MINIMUM_HEADER_SIZE || pBLInfo->HeaderSize > sizeof(BootloaderExternalSettingsInfoStruct))
     {
         //Header size is invalid
+        nBootloaderInitStatus = BOOTLOADER_INIT_STATE_ERROR_SIZE;
         return false;
     }
     else if (pBLInfo->Areas > BLR_STRUCT_MAXIMUM_AREAS)
     {
         //Too many areas
+        nBootloaderInitStatus = BOOTLOADER_INIT_STATE_ERROR_TOO_MANY_AREAS;
         return false;
     }
     else if (pBLInfo->ExternalFunctionVersion == BLR_STRUCT_INVALID_FUNCTION_VERSION_MIN || pBLInfo->ExternalFunctionVersion == BLR_STRUCT_INVALID_FUNCTION_VERSION_MAX)
     {
         //No external bootloader function version
+        nBootloaderInitStatus = BOOTLOADER_INIT_STATE_ERROR_NO_FUNCTION_VERSION;
         return false;
     }
     else if (pBLInfo->ExternalFunctionAddress == BLR_STRUCT_INVALID_FUNCTION_ADDRESS_MIN || pBLInfo->ExternalFunctionAddress == BLR_STRUCT_INVALID_FUNCTION_ADDRESS_MAX)
     {
         //No external bootloader function address
+        nBootloaderInitStatus = BOOTLOADER_INIT_STATE_ERROR_NO_FUNCTION_ADDRESS;
         return false;
     }
 
@@ -126,6 +132,7 @@ BlrPubSetup(
     if (MscPubCalc32bitCrcNonTableMethod(0, (uint8_t *)(BOOTLOADER_EXTERNAL_STRUCT_ADDR + sizeof(pBLInfo->Checksum)), (sizeof(BootloaderExternalSettingsInfoStruct) - sizeof(pBLInfo->Checksum))) != pBLInfo->Checksum)
     {
         //Checksum mismatch
+        nBootloaderInitStatus = BOOTLOADER_INIT_STATE_CHECKSUM_MISMATCH;
         return false;
     }
 #endif
@@ -133,8 +140,45 @@ BlrPubSetup(
     //Header verified, update parameters
     nExternalFunctionAddress = pBLInfo->ExternalFunctionAddress;
     nExternalFunctionVersion = pBLInfo->ExternalFunctionVersion;
+    nBootloaderInitStatus = BOOTLOADER_INIT_STATE_INITIALISED;
 
     return true;
+}
+
+/*============================================================================*/
+/* Return information on external bootloader function                         */
+/*============================================================================*/
+uint8_t
+BlrPubGetInfo(
+    uint16_t *pExternalFunctionVersion,
+    uint16_t *pHeaderVersion,
+    uint8_t *pFirmwareBuildDate
+    )
+{
+    if (nBootloaderInitStatus != BOOTLOADER_INIT_STATE_INITIALISED)
+    {
+        //Bootloader has not been initialised
+        return nBootloaderInitStatus;
+    }
+
+    //Fetch information
+    BootloaderExternalSettingsInfoStruct *pBLInfo;
+    pBLInfo = (void*)BOOTLOADER_EXTERNAL_STRUCT_ADDR;
+
+    if (pExternalFunctionVersion != NULL)
+    {
+        *pExternalFunctionVersion = nExternalFunctionVersion;
+    }
+    if (pHeaderVersion != NULL)
+    {
+        *pHeaderVersion = pBLInfo->HeaderVersion;
+    }
+    if (pFirmwareBuildDate != NULL)
+    {
+        memcpy(pFirmwareBuildDate, pBLInfo->BuildDate, sizeof(__DATE__));
+    }
+
+    return BOOTLOADER_INIT_STATE_INITIALISED;
 }
 
 /*============================================================================*/
@@ -179,7 +223,7 @@ BlrPubInfo(
     )
 {
     uint8_t nTmpVal;
-    uint32_t nDataSize;
+    uint32_t nDataSize = 0;
     void *pDataPos;
 
     if (!nExternalFunctionAddress)

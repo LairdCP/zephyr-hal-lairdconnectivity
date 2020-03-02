@@ -46,7 +46,7 @@
 //Commented lines are for possible future use
 enum BLR_TYPES
 {
-    BLR_TYPE_UNKNOWN = 0,
+    BLR_TYPE_UNKNOWN                                  = 0,
     BLR_TYPE_NUMERIC,
     BLR_TYPE_BYTE_ARRAY,
     BLR_TYPE_STRING,
@@ -57,7 +57,7 @@ enum BLR_TYPES
 //Commented lines are for possible future use
 enum BLR_EXTENDED_TYPES
 {
-    BLR_EXTENDED_TYPE_UNKNOWN = 0,
+    BLR_EXTENDED_TYPE_UNKNOWN                         = 0,
     BLR_EXTENDED_TYPE_NUMERIC_LITTLE_ENDIAN,
     BLR_EXTENDED_TYPE_NUMERIC_BIG_ENDIAN,
     BLR_EXTENDED_TYPE_BYTE_ARRAY,
@@ -68,7 +68,7 @@ enum BLR_EXTENDED_TYPES
 
 enum BLR_INFO_TYPES
 {
-    BLR_INFO_TYPE_HEADER_CHECKSUM             = 0,
+    BLR_INFO_TYPE_HEADER_CHECKSUM                     = 0,
     BLR_INFO_TYPE_HEADER_VERSION,
     BLR_INFO_TYPE_HEADER_SIZE,
     BLR_INFO_TYPE_EXTERNAL_FUNCTION_ADDRESS,
@@ -77,7 +77,7 @@ enum BLR_INFO_TYPES
     BLR_INFO_TYPE_AREAS,
     BLR_INFO_TYPE_BUILD_DATE,
 
-    BLR_INFO_TYPE_AREA_START_ADDRESS          = 0x40,
+    BLR_INFO_TYPE_AREA_START_ADDRESS                  = 0x40,
     BLR_INFO_TYPE_AREA_SIZE,
     BLR_INFO_TYPE_AREA_CHECKSUM,
     BLR_INFO_TYPE_AREA_VERSION,
@@ -89,24 +89,36 @@ enum BLR_INFO_TYPES
 
 enum BLE_FUNCTION_VERSIONS
 {
-    BLR_FUNCTION_VERSION_1                    = 1,          //First version of bootloader function
+    BLR_FUNCTION_VERSION_1                            = 1,          //First version of bootloader function
     BLR_FUNCTION_VERSION_2,
 
     BLR_FUNCTION_VERSION_MAX
+};
+
+enum BOOTLOADER_INIT_STATES
+{
+    BOOTLOADER_INIT_STATE_UNINITIALISED               = 0,
+    BOOTLOADER_INIT_STATE_INITIALISED,
+    BOOTLOADER_INIT_STATE_ERROR_CHECKSUM_INVALID,
+    BOOTLOADER_INIT_STATE_ERROR_SIZE,
+    BOOTLOADER_INIT_STATE_ERROR_TOO_MANY_AREAS,
+    BOOTLOADER_INIT_STATE_ERROR_NO_FUNCTION_VERSION,
+    BOOTLOADER_INIT_STATE_ERROR_NO_FUNCTION_ADDRESS,
+    BOOTLOADER_INIT_STATE_CHECKSUM_MISMATCH
 };
 
 /******************************************************************************/
 /* Local Defines*/
 /******************************************************************************/
 
-#define BLR_STRUCT_INVALID_CHECKSUM_MIN         0           //Invalid checksum value
-#define BLR_STRUCT_INVALID_CHECKSUM_MAX         0xffffffff  //Invalid checksum value
-#define BLR_STRUCT_MINIMUM_HEADER_SIZE          10          //Minimum header size
-#define BLR_STRUCT_MAXIMUM_AREAS                8           //Maximum areas
-#define BLR_STRUCT_INVALID_FUNCTION_VERSION_MIN 0           //Invalid function version value
-#define BLR_STRUCT_INVALID_FUNCTION_VERSION_MAX 0xffffffff  //Invalid function version value
-#define BLR_STRUCT_INVALID_FUNCTION_ADDRESS_MIN 0           //Invalid function address value
-#define BLR_STRUCT_INVALID_FUNCTION_ADDRESS_MAX 0xffffffff  //Invalid function address value
+#define BLR_STRUCT_INVALID_CHECKSUM_MIN         0                   //Invalid checksum value
+#define BLR_STRUCT_INVALID_CHECKSUM_MAX         0xffffffff          //Invalid checksum value
+#define BLR_STRUCT_MINIMUM_HEADER_SIZE          10                  //Minimum header size
+#define BLR_STRUCT_MAXIMUM_AREAS                8                   //Maximum areas
+#define BLR_STRUCT_INVALID_FUNCTION_VERSION_MIN 0                   //Invalid function version value
+#define BLR_STRUCT_INVALID_FUNCTION_VERSION_MAX 0xffffffff          //Invalid function version value
+#define BLR_STRUCT_INVALID_FUNCTION_ADDRESS_MIN 0                   //Invalid function address value
+#define BLR_STRUCT_INVALID_FUNCTION_ADDRESS_MAX 0xffffffff          //Invalid function address value
 
 /******************************************************************************/
 /* Local Macros*/
@@ -153,6 +165,16 @@ enum BLE_FUNCTION_VERSIONS
 /*=============================================================================*/
 bool
 BlrPubSetup(
+    );
+
+/*============================================================================*/
+/* Return information on external bootloader function                         */
+/*============================================================================*/
+uint8_t
+BlrPubGetInfo(
+    uint16_t *pExternalFunctionVersion,
+    uint16_t *pHeaderVersion,
+    uint8_t *pFirmwareBuildDate
     );
 
 /*=============================================================================*/
