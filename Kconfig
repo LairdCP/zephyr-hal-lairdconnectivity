@@ -10,7 +10,7 @@
 # fitness for a particular purpose and non-infringement.
 #
 
-if BOARD_PINNACLE_100_DVK
+if BOARD_PINNACLE_100_DVK || BOARD_MG100
 
 menuconfig HAS_LAIRDCONNECTIVITY
 	bool "Laird Connectivity Universal Bootloader support"
